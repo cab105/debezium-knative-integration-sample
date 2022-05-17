@@ -1,0 +1,60 @@
+# The sink binding that will derive the value to set for K_SINK. Must be
+# before the service or else two revisions of the service will be spun up: one
+# with K_SINK and one without.
+apiVersion: sources.knative.dev/v1
+kind: SinkBinding
+metadata:
+  name: debezium-capturer-binding
+spec:
+  subject:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: debezium-capturer
+  sink:
+    ref:
+      apiVersion: eventing.knative.dev/v1
+      kind: Broker
+      name: debezium-sample-broker
+---
+# Deploy Debezium as a service.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debezium-capturer
+  labels:
+    app: debezium-capturer
+spec:
+  selector:
+    matchLabels:
+      app: debezium-capturer
+
+  template:
+    metadata:
+      labels:
+        app: debezium-capturer
+    spec:
+      volumes:
+      - name: properties
+        configMap:
+          name: debezium-config
+      containers:
+      - name: debezium
+        # To use an official release of the debezium, replace with docker.io/debezium/server:latest
+        image: docker.io/cab105/debezium-server:latest
+        volumeMounts:
+        - name: properties
+          mountPath: /debezium/conf
+        # Note: These could also be passed in as an environment variable as well,
+        # but it is either-or for the attributes in the configmap for now.
+        # env:
+        # - name: DEBEZUM_SOURCE_DATABASE_USER
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: dbsecret
+        #       key: username
+        # - name: DEBEZUM_SOURCE_DATABASE_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: dbsecret
+        #       key: password

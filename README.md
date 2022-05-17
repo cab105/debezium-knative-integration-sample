@@ -23,6 +23,13 @@ their respective directories, and run
 
 Be sure to update the service images in [kubeconfigs](./kubeconfigs) directory.
 
+Note, in the kubeconfigs directory, there are two ways to run Debezium:
+1. [Debezium as a Knative service](./kubeconfigs/400-debezium-service.yaml)
+1. [Debezium as a Deployment](./kubeconfigs/410-debezium-deployment.yaml)
+
+Regardless of the approach, both leverage Knative's SinkBinding to ensure the
+events find their way into the Broker.
+
 Lastly, the Debezium configuration includes details such as how to connect to your
 on-prem database. Be sure to edit the [configmap](./kubeconfigs/100-configmap.yaml)
 to include the necessary credentials. Alternatively, you can follow the pattern
