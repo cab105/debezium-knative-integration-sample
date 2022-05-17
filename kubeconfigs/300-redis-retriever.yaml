@@ -1,0 +1,15 @@
+# Consumer to query redis and show the results
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: redis-retriever
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/cab105/redis-retriever:latest
+        env:
+        - name: REDIS_HOST
+          value: "redis:6379" # leverage k8s DNS resolver for the service
+

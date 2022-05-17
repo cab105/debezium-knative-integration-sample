@@ -1,0 +1,32 @@
+# Debezium configuration as a configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debezium-config
+data:
+  application.properties: |
+    debezium.sink.pravega.scope=empty
+    debezium.sink.type=http
+    # expect K_SINK to set debezium.sink.http.url
+    debezium.source.connector.class=io.debezium.connector.postgresql.PostgresConnector
+    debezium.source.plugin.name=pgoutput
+    # on-prem database configuration (must pass all variables here or as environment variables. Cannot mix/match)
+    debezium.source.database.user=postgres
+    debezium.source.database.password=password1
+    debezium.source.database.hostname=debeziumtest.example.com
+    debezium.source.database.port=5432
+    # Username and password will be passed as an environment variable secret
+    debezium.source.database.server.name=debeziumtest
+    debezium.source.database.dbname=debeziumtest
+    # Required for streaming the events
+    debezium.source.database.history=io.debezium.relational.history.MemoryDatabaseHistory
+    # The offsets are temporary here, but should reside on a permanent volume to facilitate restarts
+    debezium.source.database.history.file.filename=/tmp/debeziumtest.history
+    debezium.source.offset.storage.file.filename=/tmp/offsets.dat
+    debezium.source.offset.flush.interval.ms=0
+
+    # Added due to partial support
+    debezium.format.value=cloudevents
+
+    # Debezium debugging quarkus configs
+    #quarkus.log.level=DEBUG

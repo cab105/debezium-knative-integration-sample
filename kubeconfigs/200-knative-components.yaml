@@ -1,0 +1,44 @@
+# Setup Knative Services to capture the change events and store the results
+
+# First define the broker
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: debezium-sample-broker
+
+---
+# Then setup the ce-interceptor service to push the changes to Redis
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ce-interceptor
+  labels:
+    serving.knative.dev/visibility: cluster-local
+spec:
+  template:
+    spec:
+      containers:
+      - image: docker.io/cab105/ce-interceptor:latest
+        env:
+        - name: REDIS_HOST
+          value: "redis:6379"
+
+---
+# Then instrument the trigger to call the interceptor
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: ce-interceptor-trigger
+  labels:
+    eventing.knative.dev/broker: debezium-sample-broker
+spec:
+  broker: debezium-sample-broker
+  # We can define custom attributes if there are other events sharing the broker
+  filter:
+    attributes:
+      type: io.debezium.postgresql.datachangeevent
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      name: ce-interceptor
